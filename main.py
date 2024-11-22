@@ -1,29 +1,63 @@
 from flask import Flask, render_template, request
-import pickle
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
+import sqlite3
 
 app = Flask(__name__)
 
-def classify_prompt():
+# Load the BioBERT model
+model_name = "dmis-lab/biobert-base-cased-v1.1"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
 
-    return
+# Connect to SQLite database
+def get_db_connection():
+    conn = sqlite3.connect("health_advice.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def fetch_general_advice():
+    conn = get_db_connection()
+    advice = conn.execute("SELECT advice FROM general_advice").fetchall()
+    conn.close()
+    return [row["advice"] for row in advice]
+
+def fetch_disease_info(disease_name):
+    conn = get_db_connection()
+    info = conn.execute("SELECT details FROM diseases WHERE name LIKE ?", (f"%{disease_name}%",)).fetchone()
+    conn.close()
+    return info["details"] if info else "No information found for this disease."
+
+def classify_prompt(prompt):
+    """
+    Classifies the prompt into categories: 'symptom', 'disease inquiry', 'general advice', or 'general query'.
+    """
+    if "symptom" in prompt.lower() or "feel" in prompt.lower():
+        return "symptom"
+    elif "disease" in prompt.lower() or "problem" in prompt.lower():
+        return "disease inquiry"
+    elif "advice" in prompt.lower():
+        return "general advice"
+    else:
+        return "general query"
+
 def inference_engine(prompt):
+    """
+    Uses BioBERT and database to provide a response based on the classification.
+    """
+    classification = classify_prompt(prompt)
 
-    """i will first classify the prompt based on what it is and then make it respond
-    it maybe be info based, medical, symptoms, or general chat, query etc."""
-
-
-
-    return
-# Load the model and vectorizer
-with open('model.pkl', 'rb') as model_file:
-    model = pickle.load(model_file)
-with open('vectorizer.pkl', 'rb') as vec_file:
-    vectorizer = pickle.load(vec_file)
-
-def assess_symptoms(symptoms):
-    X = vectorizer.transform([symptoms])
-    prediction = model.predict(X)[0]
-    return f"You may have {prediction}. Please consult a healthcare provider for a thorough diagnosis."
+    if classification == "symptom":
+        return qa_pipeline({
+            "question": prompt,
+            "context": " ".join(fetch_general_advice())
+        })["answer"]
+    elif classification == "disease inquiry":
+        return fetch_disease_info(prompt)
+    elif classification == "general advice":
+        return " ".join(fetch_general_advice())
+    else:
+        return "Could you provide more context or specify your query?"
 
 @app.route('/')
 def home():
@@ -31,9 +65,9 @@ def home():
 
 @app.route('/result', methods=['POST'])
 def result():
-    symptoms = request.form['symptoms']
-    assessment = assess_symptoms(symptoms)
-    return f"<div class='bubble response'>{assessment}</div>"
+    prompt = request.form['prompt']
+    response = inference_engine(prompt)
+    return f"<div class='bubble response'>{response}</div>"
 
 if __name__ == '__main__':
     app.run(debug=True)
