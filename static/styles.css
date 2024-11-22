@@ -1,0 +1,81 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1b1b1b;  /* Black */
+    color: #818181;  /* Light Grey */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background: #403f3f;  /* Dark Grey */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    width: 80%;
+    max-width: 800px;  /* Increased max-width for larger chatbox */
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 24px;  /* Decreased font size */
+    text-align: left;
+    color: #b6b89a;  /* Light Grey */
+}
+
+#chat-container {
+    flex: 1;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #474646;  /* Light Grey */
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.bubble {
+    border-radius: 20px;
+    padding: 8px;  /* Decreased padding */
+    margin: 5px 0;
+    max-width: 60%;  /* Reduced max-width for smaller bubbles */
+    width: fit-content;
+    font-size: 14px;  /* Decreased font size */
+}
+
+.user {
+    background-color: #444444;  /* User bubble color */
+    color: #D3D3D3;  /* Light Grey */
+    align-self: flex-end;  /* Align user bubbles to the right */
+}
+
+.response {
+    background-color: #333333;  /* AI response bubble color */
+    color: #D3D3D3;  /* Light Grey */
+    align-self: flex-start;  /* Align AI response bubbles to the left */
+}
+
+form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+.input-bar {
+    width: 100%;
+    padding: 8px 12px;  /* Decreased padding */
+    border-radius: 20px;
+    border: 1px solid #404040;  /* Light Grey */
+    background-color: #333333;  /* Dark Grey */
+    color: #D3D3D3;  /* Light Grey */
+    font-size: 14px;  /* Decreased font size */
+}
+
+button {
+    display: none;
+}

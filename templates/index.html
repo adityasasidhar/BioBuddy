@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioBUD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>BioBUD</h1>
+        <div id="chat-container"></div>
+        <form id="chat-form" action="/result" method="post">
+            <input id="symptoms" name="symptoms" type="text" placeholder="Enter your message here..." class="input-bar">
+            <button type="submit" style="display: none;">Send</button>
+        </form>
+    </div>
+    <script>
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('symptoms');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+        });
+
+        input.addEventListener('keydown', async function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+
+                const userMessage = input.value;
+                if (userMessage.trim() === "") return;  // Ignore empty messages
+
+                const userBubble = document.createElement('div');
+                userBubble.classList.add('bubble', 'user');
+                userBubble.innerHTML = userMessage;
+                const chatContainer = document.getElementById('chat-container');
+                chatContainer.appendChild(userBubble);
+
+                const response = await fetch('/result', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(new FormData(form)),
+                });
+                const text = await response.text();
+                const responseBubble = document.createElement('div');
+                responseBubble.classList.add('bubble', 'response');
+                responseBubble.innerHTML = text;
+                chatContainer.appendChild(responseBubble);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                input.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
